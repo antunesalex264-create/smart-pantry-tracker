@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Grocery & Pantry Tracker</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom scrollbar for modern look */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(156, 163, 175, 0.5);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-200">
+
+    <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-emerald-500 text-white rounded-xl shadow-md">
+                    <i class="fa-solid font-bold fa-basket-shopping text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight text-slate-900 dark:text-white">PantryPulse</h1>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Smart Grocery & Expiration Tracker</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <button id="themeToggleBtn" onclick="toggleDarkMode()" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition">
+                    <i id="themeIcon" class="fa-solid fa-moon"></i>
+                </button>
+                <button onclick="openModal()" class="flex items-center space-x-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-medium shadow-sm transition transform active:scale-95">
+                    <i class="fa-solid fa-plus"></i>
+                    <span class="hidden sm:inline">Add Item</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        <!-- Quick Summary Cards -->
+        <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Items</p>
+                    <h3 id="statTotal" class="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1">0</h3>
+                </div>
+                <div class="p-3 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl">
+                    <i class="fa-solid fa-boxes-stacked text-xl"></i>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Fresh</p>
+                    <h3 id="statFresh" class="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">0</h3>
+                </div>
+                <div class="p-3 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 rounded-xl">
+                    <i class="fa-solid fa-apple-whole text-xl"></i>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Expiring Soon</p>
+                    <h3 id="statExpiring" class="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1">0</h3>
+                </div>
+                <div class="p-3 bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 rounded-xl">
+                    <i class="fa-solid fa-clock text-xl"></i>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-rose-600 dark:text-rose-400 uppercase tracking-wider">Expired</p>
+                    <h3 id="statExpired" class="text-2xl font-bold text-rose-600 dark:text-rose-400 mt-1">0</h3>
+                </div>
+                <div class="p-3 bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 rounded-xl">
+                    <i class="fa-solid fa-triangle-exclamation text-xl"></i>
+                </div>
+            </div>
+        </section>
+
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Chart Section -->
+            <div class="lg:col-span-1 bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm flex flex-col justify-between">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-pie text-emerald-500"></i> Category Breakdown
+                    </h2>
+                </div>
+                <div class="relative w-full h-64 flex items-center justify-center">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+                <p class="text-xs text-center text-slate-400 dark:text-slate-500 mt-3">Distribution of items across grocery categories</p>
+            </div>
+
+            <div class="lg:col-span-2 bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm flex flex-col">
+                <!-- Controls Header -->
+                <div class="flex flex-col sm:flex-row gap-3 mb-5 justify-between items-stretch sm:items-center">
+                    <div class="relative flex-1">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="searchInput" oninput="renderItems()" placeholder="Search items..." class="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <select id="categoryFilter" onchange="renderItems()" class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm rounded-xl py-2 px-3 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="ALL">All Categories</option>
+                            <option value="Produce">Produce</option>
+                            <option value="Dairy">Dairy</option>
+                            <option value="Protein">Protein</option>
+                            <option value="Grains/Pantry">Grains/Pantry</option>
+                            <option value="Snacks">Snacks</option>
+                            <option value="Beverages">Beverages</option>
+                        </select>
+
+                        <select id="statusFilter" onchange="renderItems()" class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm rounded-xl py-2 px-3 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="ALL">All Statuses</option>
+                            <option value="FRESH">Fresh</option>
+                            <option value="EXPIRING">Expiring Soon</option>
+                            <option value="EXPIRED">Expired</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Items Table Container -->
+                <div class="flex-1 overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="text-xs uppercase bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
+                            <tr>
+                                <th class="px-4 py-3 rounded-l-lg">Item</th>
+                                <th class="px-4 py-3">Category</th>
+                                <th class="px-4 py-3">Quantity</th>
+                                <th class="px-4 py-3">Expires</th>
+                                <th class="px-4 py-3">Status</th>
+                                <th class="px-4 py-3 text-right rounded-r-lg">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="itemsTableBody" class="divide-y divide-slate-100 dark:divide-slate-700/50">
+                            <!-- Rows injected via JavaScript -->
+                        </tbody>
+                    </table>
+
+                    <!-- Empty State -->
+                    <div id="emptyState" class="hidden py-12 text-center">
+                        <i class="fa-solid fa-box-open text-4xl text-slate-300 dark:text-slate-600 mb-3"></i>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm">No inventory items match your current filter.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="itemModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white dark:bg-slate-800 w-full max-w-md rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden transform transition-all">
+            <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+                <h3 id="modalTitle" class="font-bold text-lg text-slate-900 dark:text-white">Add Pantry Item</h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form id="itemForm" onsubmit="handleFormSubmit(event)" class="p-6 space-y-4">
+                <input type="hidden" id="itemId">
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Item Name</label>
+                    <input type="text" id="itemName" required placeholder="e.g. Organic Milk, Avocados" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Category</label>
+                        <select id="itemCategory" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="Produce">Produce</option>
+                            <option value="Dairy">Dairy</option>
+                            <option value="Protein">Protein</option>
+                            <option value="Grains/Pantry">Grains/Pantry</option>
+                            <option value="Snacks">Snacks</option>
+                            <option value="Beverages">Beverages</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Expiration Date</label>
+                        <input type="date" id="itemExpiry" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Quantity</label>
+                        <input type="number" id="itemQuantity" min="1" value="1" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Unit</label>
+                        <input type="text" id="itemUnit" placeholder="e.g. pcs, cartons, lbs" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                </div>
+
+                <div class="pt-4 flex justify-end gap-2">
+                    <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl text-sm font-medium hover:bg-slate-200">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-medium shadow-sm">Save Item</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Default Sample Data
+        const defaultItems = [
+            { id: "1", name: "Whole Milk", category: "Dairy", quantity: 1, unit: "carton", expiryDate: formatDateOffset(2) },
+            { id: "2", name: "Avocados", category: "Produce", quantity: 4, unit: "pcs", expiryDate: formatDateOffset(1) },
+            { id: "3", name: "Greek Yogurt", category: "Dairy", quantity: 2, unit: "tubs", expiryDate: formatDateOffset(-1) },
+            { id: "4", name: "Chicken Breast", category: "Protein", quantity: 2, unit: "lbs", expiryDate: formatDateOffset(5) },
+            { id: "5", name: "Sourdough Bread", category: "Grains/Pantry", quantity: 1, unit: "loaf", expiryDate: formatDateOffset(3) },
+            { id: "6", name: "Orange Juice", category: "Beverages", quantity: 1, unit: "bottle", expiryDate: formatDateOffset(10) }
+        ];
+
+        let pantryItems = [];
+        let categoryChart = null;
+
+        // Date Offset Helper
+        function formatDateOffset(days) {
+            const date = new Date();
+            date.setDate(date.getDate() + days);
+            return date.toISOString().split('T')[0];
+        }
+
+        // Initialize App
+        window.onload = function() {
+            loadPantryData();
+            initChart();
+            renderItems();
+            updateStats();
+        };
+
+        // Dark Mode Toggle
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            const icon = document.getElementById('themeIcon');
+            icon.className = isDark ? 'fa-solid fa-sun text-amber-400' : 'fa-solid fa-moon';
+            if (categoryChart) {
+                categoryChart.options.plugins.legend.labels.color = isDark ? '#cbd5e1' : '#475569';
+                categoryChart.update();
+            }
+        }
+
+        // Local Storage Management
+        function loadPantryData() {
+            const saved = localStorage.getItem('pantry_pulse_items');
+            if (saved) {
+                try {
+                    pantryItems = JSON.parse(saved);
+                } catch (e) {
+                    pantryItems = defaultItems;
+                }
+            } else {
+                pantryItems = defaultItems;
+                savePantryData();
+            }
+        }
+
+        function savePantryData() {
+            localStorage.setItem('pantry_pulse_items', JSON.stringify(pantryItems));
+        }
+
+        // Calculate Days Until Expiration & Status
+        function getItemStatus(expiryDateStr) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const expiry = new Date(expiryDateStr);
+            const diffTime = expiry - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays < 0) return { label: 'Expired', key: 'EXPIRED', days: diffDays, badgeClass: 'bg-rose-100 text-rose-700 dark:bg-rose-950/70 dark:text-rose-400 border border-rose-200 dark:border-rose-800' };
+            if (diffDays <= 3) return { label: `In ${diffDays} day${diffDays === 1 ? '' : 's'}`, key: 'EXPIRING', days: diffDays, badgeClass: 'bg-amber-100 text-amber-700 dark:bg-amber-950/70 dark:text-amber-400 border border-amber-200 dark:border-amber-800' };
+            return { label: `In ${diffDays} days`, key: 'FRESH', days: diffDays, badgeClass: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800' };
+        }
+
+        function renderItems() {
+            const tbody = document.getElementById('itemsTableBody');
+            const searchVal = document.getElementById('searchInput').value.toLowerCase();
+            const categoryVal = document.getElementById('categoryFilter').value;
+            const statusVal = document.getElementById('statusFilter').value;
+
+            tbody.innerHTML = '';
+
+            const filteredItems = pantryItems.filter(item => {
+                const matchesSearch = item.name.toLowerCase().includes(searchVal);
+                const matchesCategory = categoryVal === 'ALL' || item.category === categoryVal;
+                const statusInfo = getItemStatus(item.expiryDate);
+                const matchesStatus = statusVal === 'ALL' || statusInfo.key === statusVal;
+
+                return matchesSearch && matchesCategory && matchesStatus;
+            });
+
+            document.getElementById('emptyState').classList.toggle('hidden', filteredItems.length > 0);
+
+            filteredItems.forEach(item => {
+                const status = getItemStatus(item.expiryDate);
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/80 dark:hover:bg-slate-700/30 transition-colors";
+
+                tr.innerHTML = `
+                    <td class="px-4 py-3 font-semibold text-slate-800 dark:text-slate-100">${escapeHtml(item.name)}</td>
+                    <td class="px-4 py-3 text-slate-500 dark:text-slate-400">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                            ${item.category}
+                        </span>
+                    </td>
+                    <td class="px-4 py-3">
+                        <div class="flex items-center space-x-2">
+                            <button onclick="adjustQuantity('${item.id}', -1)" class="w-6 h-6 rounded-md bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center text-xs hover:bg-slate-200 dark:hover:bg-slate-600">-</button>
+                            <span class="font-medium text-slate-700 dark:text-slate-200">${item.quantity} ${escapeHtml(item.unit || '')}</span>
+                            <button onclick="adjustQuantity('${item.id}', 1)" class="w-6 h-6 rounded-md bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center text-xs hover:bg-slate-200 dark:hover:bg-slate-600">+</button>
+                        </div>
+                    </td>
+                    <td class="px-4 py-3 text-slate-600 dark:text-slate-300 text-xs">${item.expiryDate}</td>
+                    <td class="px-4 py-3">
+                        <span class="px-2.5 py-1 rounded-full text-xs font-semibold ${status.badgeClass}">
+                            ${status.label}
+                        </span>
+                    </td>
+                    <td class="px-4 py-3 text-right">
+                        <div class="flex items-center justify-end space-x-2">
+                            <button onclick="editItem('${item.id}')" class="text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 p-1">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                            <button onclick="deleteItem('${item.id}')" class="text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 p-1">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            updateStats();
+            updateChart();
+        }
+
+        // Statistic Card Updates
+        function updateStats() {
+            let fresh = 0, expiring = 0, expired = 0;
+
+            pantryItems.forEach(item => {
+                const status = getItemStatus(item.expiryDate).key;
+                if (status === 'FRESH') fresh++;
+                else if (status === 'EXPIRING') expiring++;
+                else if (status === 'EXPIRED') expired++;
+            });
+
+            document.getElementById('statTotal').innerText = pantryItems.length;
+            document.getElementById('statFresh').innerText = fresh;
+            document.getElementById('statExpiring').innerText = expiring;
+            document.getElementById('statExpired').innerText = expired;
+        }
+
+        // Inline Quantity Modification
+        function adjustQuantity(id, delta) {
+            const item = pantryItems.find(i => i.id === id);
+            if (item) {
+                item.quantity += delta;
+                if (item.quantity <= 0) {
+                    deleteItem(id);
+                } else {
+                    savePantryData();
+                    renderItems();
+                }
+            }
+        }
+
+        // Modal Logic
+        function openModal(editId = null) {
+            const modal = document.getElementById('itemModal');
+            const form = document.getElementById('itemForm');
+            modal.classList.remove('hidden');
+
+            if (editId) {
+                const item = pantryItems.find(i => i.id === editId);
+                if (item) {
+                    document.getElementById('modalTitle').innerText = "Edit Pantry Item";
+                    document.getElementById('itemId').value = item.id;
+                    document.getElementById('itemName').value = item.name;
+                    document.getElementById('itemCategory').value = item.category;
+                    document.getElementById('itemExpiry').value = item.expiryDate;
+                    document.getElementById('itemQuantity').value = item.quantity;
+                    document.getElementById('itemUnit').value = item.unit || '';
+                }
+            } else {
+                document.getElementById('modalTitle').innerText = "Add Pantry Item";
+                form.reset();
+                document.getElementById('itemId').value = '';
+                document.getElementById('itemExpiry').value = formatDateOffset(7);
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('itemModal').classList.add('hidden');
+        }
+
+        // Create / Update Actions
+        function handleFormSubmit(event) {
+            event.preventDefault();
+            const id = document.getElementById('itemId').value;
+            const name = document.getElementById('itemName').value;
+            const category = document.getElementById('itemCategory').value;
+            const expiryDate = document.getElementById('itemExpiry').value;
+            const quantity = parseInt(document.getElementById('itemQuantity').value, 10);
+            const unit = document.getElementById('itemUnit').value;
+
+            if (id) {
+                const idx = pantryItems.findIndex(i => i.id === id);
+                if (idx !== -1) {
+                    pantryItems[idx] = { id, name, category, expiryDate, quantity, unit };
+                }
+            } else {
+                const newItem = {
+                    id: Date.now().toString(),
+                    name,
+                    category,
+                    expiryDate,
+                    quantity,
+                    unit
+                };
+                pantryItems.push(newItem);
+            }
+
+            savePantryData();
+            closeModal();
+            renderItems();
+        }
+
+        function editItem(id) {
+            openModal(id);
+        }
+
+        function deleteItem(id) {
+            pantryItems = pantryItems.filter(i => i.id !== id);
+            savePantryData();
+            renderItems();
+        }
+
+        // Chart Initialization & Rendering
+        function initChart() {
+            const ctx = document.getElementById('categoryChart').getContext('2d');
+            categoryChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        data: [],
+                        backgroundColor: [
+                            '#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4'
+                        ],
+                        borderWidth: 2,
+                        borderColor: document.documentElement.classList.contains('dark') ? '#1e293b' : '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: { family: 'Inter', size: 11 },
+                                boxWidth: 12,
+                                color: document.documentElement.classList.contains('dark') ? '#cbd5e1' : '#475569'
+                            }
+                        }
+                    },
+                    cutout: '68%'
+                }
+            });
+        }
+
+        function updateChart() {
+            if (!categoryChart) return;
+
+            const categoryCounts = {};
+            pantryItems.forEach(item => {
+                categoryCounts[item.category] = (categoryCounts[item.category] || 0) + 1;
+            });
+
+            categoryChart.data.labels = Object.keys(categoryCounts);
+            categoryChart.data.datasets[0].data = Object.values(categoryCounts);
+            categoryChart.update();
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/[&<>"']/g, function(m) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+            });
+        }
+    </script>
+</body>
+</html>
